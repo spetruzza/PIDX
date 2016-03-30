@@ -22,6 +22,7 @@ static int local_box_size[3] = {0, 0, 0};             ///< local dimensions of t
 static PIDX_point global_size, local_offset, local_size;
 static int local_box_offset[3];
 static int restart_time = -1;
+static float red_res = -1.0;
 static int nprocs = 1, rank = 0;
 
 int init(int argc, char **argv){
@@ -67,6 +68,7 @@ int init(int argc, char **argv){
     MPI_Bcast(global_box_size, 3, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(local_box_size, 3, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(&restart_time, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&red_res, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
 #endif
 
     // Calculating every process data's offset and size
@@ -257,6 +259,30 @@ int write_data(T** data, PIDX_file& file, PIDX_access& access, int ts, int varia
     if (ret != PIDX_success)  report_error("PIDX_set_current_time_step", __FILE__, __LINE__);
     ret = PIDX_set_variable_count(file, variable_count);
     if (ret != PIDX_success)  report_error("PIDX_set_variable_count", __FILE__, __LINE__);
+  
+    if(red_res > -1.0){
+      bool ok_thr = true;
+      
+      for(int x=0; x < local_size[0]; x++){
+        for(int y=0; y < local_size[1]; y++){
+          for(int z=0; z < local_size[2]; z++){
+              int idx = x + y*local_size[0] + z*(local_size[1]*local_size[0]);
+              
+              if(data[0][idx] > (T)red_res)
+                  ok_thr = false;
+              
+            }
+          }
+      }
+      
+     // printf("off %ld rank%d\n",local_offset[2], rank);
+      if(ok_thr){//local_offset[2] < red_res){//!ok_thr){
+        printf("reduced resolution for rank %d\n", rank);
+        
+        PIDX_set_resolution(file, 0, 2);
+      }
+    }
+  
 
     char var_name[512];
     for (int var = 0; var < variable_count; var++)
@@ -303,7 +329,11 @@ int main(int argc, char** argv){
 
     std::string checkpoint_filename = "checkpoint.idx";
     std::string vis_filename = "vis.idx";
-
+  
+  if(red_res > -1.0){
+    checkpoint_filename =  "checkpoint_red.idx";
+    vis_filename = "vis_red.idx";
+  }
     unsigned t = 0;
 
     // if a restart timestep has been specified
@@ -423,7 +453,7 @@ int main(int argc, char** argv){
 ///< Parse the input arguments
 static int parse_args(int argc, char **argv)
 {
-    char flags[] = "g:l:r:";
+    char flags[] = "g:l:r:m:";
     int one_opt = 0;
 
     while ((one_opt = getopt(argc, argv, flags)) != EOF)
@@ -438,8 +468,11 @@ static int parse_args(int argc, char **argv)
                 sscanf(optarg, "%dx%dx%d", &local_box_size[0], &local_box_size[1], &local_box_size[2]);
                 break;
             case('r'):
-                sscanf(optarg, "%dx", &restart_time);
+                sscanf(optarg, "%d", &restart_time);
                 break;
+            case('m'):
+              sscanf(optarg, "%f", &red_res);
+              break;
             case('?'):
                 return (-1);
         }
