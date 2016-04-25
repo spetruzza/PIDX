@@ -5,13 +5,13 @@ int main(){
   PIDX_metadata metadata;
   
   PIDX_metadata_create(&metadata, "data.xml");
-  PIDX_metadata_add_timestep(metadata, 1, 0.998);
-  PIDX_metadata_add_timestep(metadata, 2, 1.998);
+  PIDX_metadata_add_timestep(metadata, 0, 0.000000000000);
+  PIDX_metadata_add_timestep(metadata, 2, 0.000000001);
   PIDX_metadata_add_timestep(metadata, 3, 2.998);
   
-  float findv;
-  PIDX_metadata_get_timestep(metadata, 3, findv);
-  printf("3 value %f\n", findv);
+  double findv;
+  PIDX_metadata_get_timestep(metadata, 2, findv);
+  printf("2 value %g\n", findv);
   PIDX_metadata_save(metadata);
   
   PIDX_metadata_load(&metadata, "data.xml");
