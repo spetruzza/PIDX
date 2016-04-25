@@ -1827,7 +1827,7 @@ PIDX_return_code PIDX_idx_read(PIDX_idx_io file, int start_var_index, int end_va
   PIDX_return_code ret;
   //static int header_io = 0;
   int nprocs = 1;
-
+  file->comm = file->global_comm;
 #if PIDX_HAVE_MPI
   if (file->idx_d->parallel_mode == 1)
     MPI_Comm_size(file->comm,  &nprocs);
