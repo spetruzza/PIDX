@@ -1495,8 +1495,15 @@ PIDX_return_code PIDX_enable_partition_merge_io(PIDX_file file)
   return PIDX_success;
 }
 
-
-
+PIDX_return_code PIDX_enable_multi_patch_io(PIDX_file file)
+{
+  if(file == NULL)
+    return PIDX_err_file;
+  
+  file->io_type = PIDX_MULTI_PATCH_IDX_IO;
+  
+  return PIDX_success;
+}
 
 PIDX_return_code PIDX_flush(PIDX_file file)
 {
