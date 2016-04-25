@@ -95,6 +95,7 @@ struct PIDX_variable_struct
   Ndim_patch_group* chunk_patch_group;                                  ///< Pointer to the patch group after block restructuring
 
   // Block level layout
+  PIDX_block_layout partitioned_block_layout;                               ///< Block layout, specifically when variables might have different extents in the domain
   PIDX_block_layout global_block_layout;                               ///< Block layout, specifically when variables might have different extents in the domain
   PIDX_block_layout* block_layout_by_level;                            ///< Block layout, specifically when variables might have different extents in the domain
 
@@ -123,6 +124,13 @@ struct idx_file_struct
   double transform[16];
   char bitSequence[512];
   char bitPattern[512];
+
+  char idx_cg_bitSequence[512];
+  char idx_cg_bitPattern[512];
+
+  char idx_cl_bitSequence[512];
+  char idx_cl_bitPattern[512];
+
   char filename_template[1024];                                         ///< Depends on the time step
   
   int64_t reg_patch_size[PIDX_MAX_DIMENSIONS];
@@ -163,6 +171,7 @@ struct idx_dataset_derived_metadata_struct
 
   int color;
   int idx_count[PIDX_MAX_DIMENSIONS];          ///< Number of idx files in each dimensions
+  int idx_size[PIDX_MAX_DIMENSIONS];          ///< Number of idx files in each dimensions
 
   int var_pipe_length;
   int parallel_mode;
@@ -183,6 +192,7 @@ struct idx_dataset_derived_metadata_struct
 
   PIDX_time time;
 
+  int aggregator_multiplier;
   int data_core_count;
 };
 typedef struct idx_dataset_derived_metadata_struct* idx_dataset_derived_metadata;

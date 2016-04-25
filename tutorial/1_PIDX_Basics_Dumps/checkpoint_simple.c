@@ -45,12 +45,14 @@ static int process_count = 1, rank = 0;
 static unsigned long long global_box_size[3] = {162, 162, 42};
 static unsigned long long local_box_offset[3];
 static unsigned long long local_box_size[3] = {20, 20, 20};
+int partition_size[3] = {1, 1, 1};
 int sub_div[NUM_DIMS] = {1,1,1};
 static int time_step_count = 1;
 static int variable_count = 1;
 static char output_file_template[512] = "test";
 static double **data;
 static char output_file_name[512] = "test.idx";
+static int aggregator_multiplier = 1;
 static int *values_per_sample;
 static char *usage = "Serial Usage: ./checkpoint -g 32x32x32 -l 32x32x32 -v 3 -t 16 -f output_idx_file_name\n"
                      "Parallel Usage: mpirun -n 8 ./checkpoint -g 32x32x32 -l 16x16x16 -f output_idx_file_name -v 3 -t 16\n"
@@ -170,7 +172,7 @@ static void destroy_synthetic_simulation_data()
 ///< Parse the input arguments
 static void parse_args(int argc, char **argv)
 {
-  char flags[] = "g:l:f:t:v:";
+  char flags[] = "g:l:p:f:t:v:a:";
   int one_opt = 0;
 
   while ((one_opt = getopt(argc, argv, flags)) != EOF)
@@ -188,6 +190,11 @@ static void parse_args(int argc, char **argv)
         terminate_with_error_msg("Invalid local dimension\n%s", usage);
       break;
 
+    case('p'): // local dimension
+      if ((sscanf(optarg, "%dx%dx%d", &partition_size[0], &partition_size[1], &partition_size[2]) == EOF) ||(partition_size[0] < 1 || partition_size[1] < 1 || partition_size[2] < 1))
+        terminate_with_error_msg("Invalid partition dimension\n%s", usage);
+      break;
+
     case('f'): // output file name
       if (sprintf(output_file_template, "%s", optarg) < 0)
         terminate_with_error_msg("Invalid output file name template\n%s", usage);
@@ -201,6 +208,11 @@ static void parse_args(int argc, char **argv)
 
     case('v'): // number of variables
       if (sscanf(optarg, "%d", &variable_count) < 0)
+        terminate_with_error_msg("Invalid variable file\n%s", usage);
+      break;
+
+    case('a'): // number of variables
+      if (sscanf(optarg, "%d", &aggregator_multiplier) < 0)
         terminate_with_error_msg("Invalid variable file\n%s", usage);
       break;
 
@@ -266,16 +278,30 @@ int main(int argc, char **argv)
     ret = PIDX_set_variable_count(file, variable_count);
     if (ret != PIDX_success)  terminate_with_error_msg("PIDX_set_variable_count");
 
-    int io_type = PIDX_PARTITIONED_IDX_IO;//PIDX_PARTITION_MERGE_IDX_IO;
+    ret = PIDX_set_partition_size(file, partition_size[0], partition_size[1], partition_size[2]);
+    if (ret != PIDX_success)  terminate_with_error_msg("PIDX_set_partition_size");
+
+    ret = PIDX_set_aggregator_multiplier(file, aggregator_multiplier);
+    if (ret != PIDX_success)  terminate_with_error_msg("PIDX_set_partition_size");
+
+    //int io_type = PIDX_PARTITIONED_IDX_IO;//PIDX_IDX_IO;// PIDX_PARTITION_MERGE_IDX_IO;
+    int io_type = PIDX_IDX_IO;// PIDX_PARTITION_MERGE_IDX_IO;
+    //int io_type = PIDX_PARTITION_MERGE_IDX_IO;
     switch (io_type)
     {
+      case PIDX_IDX_IO:
+        PIDX_set_block_count(file, 64);
+        break;
+
       case PIDX_PARTITION_MERGE_IDX_IO:
-        PIDX_set_block_count(file,1);
-        PIDX_set_block_size(file, 3);
+        //PIDX_set_block_count(file,1);
+        //PIDX_set_block_size(file, 3);
+        PIDX_set_block_count(file, 128);
         PIDX_enable_partition_merge_io(file);
         break;
 
       case PIDX_PARTITIONED_IDX_IO:
+        PIDX_set_block_count(file, 64);
         PIDX_enable_partitioned_io(file);
         break;
 
