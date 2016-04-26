@@ -482,7 +482,13 @@ PIDX_return_code PIDX_enable_partitioned_io(PIDX_file file);
 /// \return
 ///
 PIDX_return_code PIDX_enable_partition_merge_io(PIDX_file file);
-
+  
+///
+/// \brief PIDX_enable_multi_patch_io
+/// \param file
+/// \return
+///
+PIDX_return_code PIDX_enable_multi_patch_io(PIDX_file file);
 
 ///
 PIDX_return_code PIDX_time_step_caching_ON();
