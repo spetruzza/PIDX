@@ -75,7 +75,7 @@ MESSAGE("PIDX_GIT_REVISION ${PIDX_GIT_REVISION}")
 # PIDX_BUILD_XXXX
 # ///////////////////////////////////////////////
 
-OPTION(PIDX_BUILD_TUTORIAL "Build tutorial" TRUE)
+OPTION(PIDX_BUILD_TUTORIAL "Build tutorial" FALSE)
 MESSAGE("PIDX_BUILD_TUTORIAL ${PIDX_BUILD_TUTORIAL}")
 
 OPTION(PIDX_BUILD_EXAMPLE "Build example" FALSE)
@@ -86,6 +86,9 @@ MESSAGE("PIDX_BUILD_CONVERT ${PIDX_BUILD_CONVERT}")
 
 OPTION(PIDX_BUILD_PROFILE "pidx profile tools" FALSE)
 MESSAGE("PIDX_BUILD_PROFILE ${PIDX_BUILD_PROFILE}")
+
+OPTION(PIDX_BUILD_METADATA "pidx metadata tools" FALSE)
+MESSAGE("PIDX_BUILD_METADATA ${PIDX_BUILD_METADATA}")
 
 # ///////////////////////////////////////////////
 # PIDX_OPTION_XXXX
@@ -135,6 +138,12 @@ IF (PIDX_OPTION_HDF5)
   ENDIF()
 ENDIF()
 
+MESSAGE("PIDX_BUILD_METADATA ${PIDX_BUILD_METADATA}")
+OPTION(PIDX_BUILD_METADATA "Metadata IDX support" FALSE)
+#IF (PIDX_BUILD_METADATA)
+#  SET(PIDX_HAVE_METADATA 1)
+#ENDIF()
+
 # ///////////////////////////////////////////////
 # configuration
 # ///////////////////////////////////////////////
@@ -150,7 +159,8 @@ ADD_SUBDIRECTORY(external)
 ADD_SUBDIRECTORY(pidx)
 ADD_SUBDIRECTORY(tutorial)
 ADD_SUBDIRECTORY(profile)
-ADD_SUBDIRECTORY(examples)
+ADD_SUBDIRECTORY(metadata)
+# ADD_SUBDIRECTORY(examples)
 
 # ///////////////////////////////////////////////
 # installation
@@ -160,3 +170,7 @@ MESSAGE("CMAKE_INSTALL_PREFIX is " ${CMAKE_INSTALL_PREFIX})
 INSTALL(DIRECTORY pidx/ DESTINATION include FILES_MATCHING PATTERN "*.h")
 INSTALL(FILES     "${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindPIDX.cmake" DESTINATION .)
 INSTALL(FILES     "${PROJECT_BINARY_DIR}/PIDX_config.h" DESTINATION include)
+
+IF (PIDX_BUILD_METADATA)
+  INSTALL(DIRECTORY metadata/ DESTINATION include/metadata FILES_MATCHING PATTERN "*.h")
+ENDIF()

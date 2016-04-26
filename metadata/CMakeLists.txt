@@ -1,0 +1,40 @@
+#/*****************************************************
+# **  PIDX Parallel I/O Library                      **
+# **  Copyright (c) 2010-2014 University of Utah     **
+# **  Scientific Computing and Imaging Institute     **
+# **  72 S Central Campus Drive, Room 3750           **
+# **  Salt Lake City, UT 84112                       **
+# **                                                 **
+# **  PIDX is licensed under the Creative Commons    **
+# **  Attribution-NonCommercial-NoDerivatives 4.0    **
+# **  International License. See LICENSE.md.         **
+# **                                                 **
+# **  For information about this project see:        **
+# **  http://www.cedmav.com/pidx                     **
+# **  or contact: pascucci@sci.utah.edu              **
+# **  For support: PIDX-support@visus.net            **
+# **                                                 **
+# *****************************************************/
+
+
+IF (PIDX_BUILD_METADATA)
+
+  # ////////////////////////////////////////
+  # sources includes and link libraries
+  # ////////////////////////////////////////
+
+  INCLUDE_DIRECTORIES(${TINYXML_INCLUDE_DIR})
+  INCLUDE_DIRECTORIES(./)
+
+  FILE(GLOB SRCS FALSE ./*.cpp ./*.h ${TINYXML_INCLUDE_DIR}/*.cpp)
+
+  SET(PIDX_METADATA_LIB "pidx_metadata")
+  PIDX_ADD_LIBRARY(${PIDX_METADATA_LIB} ${SRCS})
+  TARGET_LINK_LIBRARIES(${PIDX_METADATA_LIB} tinyxml)
+  SET_TARGET_PROPERTIES(${PIDX_METADATA_LIB} PROPERTIES LINKER_LANGUAGE CXX)
+
+  PIDX_ADD_EXECUTABLE(pidx_metadata_test "pidx_metadata_test.cpp")
+  TARGET_LINK_LIBRARIES(pidx_metadata_test ${PIDX_METADATA_LIB})
+  
+
+ENDIF()

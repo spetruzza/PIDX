@@ -1,0 +1,45 @@
+#include <cstdio>
+#include "PIDX_metadata.h"
+
+int main(){
+  PIDX_metadata metadata;
+  
+  PIDX_metadata_create(&metadata, "data.xml");
+  PIDX_metadata_add_timestep(metadata, 1, 0.998);
+  PIDX_metadata_add_timestep(metadata, 2, 1.998);
+  PIDX_metadata_add_timestep(metadata, 3, 2.998);
+  
+  float findv;
+  PIDX_metadata_get_timestep(metadata, 3, findv);
+  printf("3 value %f\n", findv);
+  PIDX_metadata_save(metadata);
+  
+  PIDX_metadata_load(&metadata, "data.xml");
+  PIDX_metadata_add_timestep(metadata, 4, 3.598);
+  PIDX_metadata_save(metadata);
+  
+  return 0;
+}
+
+/*
+int main(){
+  
+  MetadataIDX& meta = *MetadataIDX::getInstance();
+  
+  meta.create("data.xml");
+  meta.addTimeStep(1, 0.998);
+  meta.addTimeStep(2, 1.998);
+  meta.addTimeStep(3, 2.998);
+  
+  float findv;
+  meta.getTimeStep(3, findv);
+  printf("3 value %f\n", findv);
+  meta.save();
+  
+  meta.load("data.xml");
+  meta.addTimeStep(4, 3.598);
+  meta.save();
+  
+  return 0;
+}
+*/

@@ -1,0 +1,17 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:complexType name="timestep_type">
+    <xs:simpleContent>
+      <xs:extension base="xs:positiveInteger">
+        <xs:attribute name="time" type="xs:decimal" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:element name="timesteps">
+    <xs:complexType>
+      <xs:sequence  maxOccurs="unbounded">
+        <xs:element name="timestep" type="timestep_type"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
