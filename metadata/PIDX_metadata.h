@@ -29,9 +29,9 @@ int PIDX_metadata_create(PIDX_metadata* metadata, const char* _filename);
 
 int PIDX_metadata_save(PIDX_metadata metadata);
 
-int PIDX_metadata_add_timestep(PIDX_metadata metadata, int index, float value);
+int PIDX_metadata_add_timestep(PIDX_metadata metadata, int index, double value);
 
-int PIDX_metadata_get_timestep(PIDX_metadata metadata, int index, float& value);
+int PIDX_metadata_get_timestep(PIDX_metadata metadata, int index, double& value);
 
 int PIDX_metadata_destroy(PIDX_metadata metadata);
 

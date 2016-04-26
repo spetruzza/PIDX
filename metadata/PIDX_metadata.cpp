@@ -18,6 +18,11 @@
 
 char* itoa(int val, int base){
   static char buf[32] = {0};
+  if(val == 0){
+    strcpy(buf,"0");
+    return buf;
+  }
+
   int i = 30;
   for(; val && i ; --i, val /= base)
     buf[i] = "0123456789abcdef"[val % base];
@@ -66,7 +71,7 @@ int PIDX_metadata_save(PIDX_metadata metadata){
   return -1;
 };
 
-int PIDX_metadata_add_timestep(PIDX_metadata metadata, int index, float value){
+int PIDX_metadata_add_timestep(PIDX_metadata metadata, int index, double value){
   if(!metadata)
     return -1;// use PIDX error
   
@@ -86,12 +91,14 @@ int PIDX_metadata_add_timestep(PIDX_metadata metadata, int index, float value){
   
   TiXmlText * log_time = new TiXmlText( itoa(index,10) );
   timestep->LinkEndChild(log_time);
-  timestep->SetDoubleAttribute("time", value);
-  
+  char phy_value[32];
+  sprintf(phy_value,"%g",value);
+  timestep->SetAttribute("time", phy_value);
+    
   return 0;
 };
 
-int PIDX_metadata_get_timestep(PIDX_metadata metadata, int index, float& value){
+int PIDX_metadata_get_timestep(PIDX_metadata metadata, int index, double& value){
   if(!metadata)
     return -1;// use PIDX error
   
@@ -104,7 +111,7 @@ int PIDX_metadata_get_timestep(PIDX_metadata metadata, int index, float& value){
     int time_log = atoi(child->GetText());
     
     if (time_log == index){
-      value = atof(child->Attribute("time"));
+      value = strtod(child->Attribute("time"),NULL);
       return 0;
     }
     
@@ -116,6 +123,7 @@ int PIDX_metadata_get_timestep(PIDX_metadata metadata, int index, float& value){
 int PIDX_metadata_destroy(PIDX_metadata metadata){
   if (metadata->doc != NULL) delete metadata->doc;
   if (metadata){ delete metadata; metadata = NULL; }
+  return 0;
 }
 
 
