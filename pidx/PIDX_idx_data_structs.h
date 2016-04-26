@@ -94,6 +94,9 @@ struct idx_file_struct
   int variable_index_tracker;
   PIDX_variable variable[1024];
   
+  int first_tstep;                                                     ///< The first timestep index in the IDX file
+  int last_tstep;                                                      ///< The last timestep index in the IDX file
+  
   char filename[1024];
   int bits_per_block;
   int blocks_per_file;
