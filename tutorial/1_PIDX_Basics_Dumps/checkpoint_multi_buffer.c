@@ -487,7 +487,7 @@ int main(int argc, char **argv)
 
  //   PIDX_debug_rst(file, 1);
     PIDX_debug_output(file);
-    PIDX_enable_raw_io(file);
+  //  PIDX_enable_raw_io(file);
     //PIDX_debug_hz(file, 1);
 
     for (var = 0; var < variable_count; var++)

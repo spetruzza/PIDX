@@ -14,7 +14,7 @@ __typeof__ (b) _b = (b); \
 _a > _b ? _a : _b; })
 #endif
 
-#define PIDX_HACK_MULTI_PATCH 1
+#define PIDX_HACK_MULTI_PATCH 0
 
 static PIDX_return_code populate_idx_layout(PIDX_multi_patch_idx_io file, int start_var_index, int end_var_index, PIDX_block_layout block_layout, int lower_hz_level, int higher_hz_level);
 static PIDX_return_code delete_idx_dataset(PIDX_multi_patch_idx_io file, int start_var_index, int end_var_index);
@@ -22,8 +22,8 @@ static PIDX_return_code populate_idx_dataset(PIDX_multi_patch_idx_io file, int s
 static PIDX_return_code PIDX_file_initialize_time_step(PIDX_multi_patch_idx_io file, char* file_name, int current_time_step);
 static PIDX_return_code PIDX_parameter_validate(PIDX_multi_patch_idx_io file, int start_var_index, int end_var_index);
 
-static PIDX_return_code union_patches(int64_t* pa_offset, int64_t* pa_size,
-      int64_t* pb_offset, int64_t* pb_size, int64_t* pc_offset, int64_t* pc_size){
+static PIDX_return_code union_patches(const int64_t* pa_offset, const int64_t* pa_size,
+      const int64_t* pb_offset, const int64_t* pb_size, int64_t* pc_offset, int64_t* pc_size){
   int d = 0;
   for(d=0; d < PIDX_MAX_DIMENSIONS; d++){
     pc_offset[d] = min(pa_offset[d],pb_offset[d]);
@@ -1068,9 +1068,14 @@ PIDX_return_code PIDX_multi_patch_idx_write(PIDX_multi_patch_idx_io file, int st
   if (file->idx_d->parallel_mode == 1)
   {
 #if !PIDX_HACK_MULTI_PATCH
+    int rank = 0;
+    MPI_Comm_rank(file->comm, &rank);
 
-    int64_t* union_patch_offset = file->idx->variable[start_var_index]->sim_patch[0]->offset;
-    int64_t* union_patch_size = file->idx->variable[start_var_index]->sim_patch[0]->size;
+    int64_t* union_patch_offset = malloc(sizeof (int64_t) * PIDX_MAX_DIMENSIONS);
+    memcpy(union_patch_offset, file->idx->variable[start_var_index]->sim_patch[0]->offset, (sizeof (int64_t) * PIDX_MAX_DIMENSIONS));
+
+    int64_t* union_patch_size = malloc(sizeof (int64_t) * PIDX_MAX_DIMENSIONS);
+    memcpy(union_patch_size, file->idx->variable[start_var_index]->sim_patch[0]->size, (sizeof (int64_t) * PIDX_MAX_DIMENSIONS));
     int64_t pc=0;
 
     for(pc=0; pc < file->idx->variable[start_var_index]->sim_patch_count; pc++){
@@ -1080,13 +1085,16 @@ PIDX_return_code PIDX_multi_patch_idx_write(PIDX_multi_patch_idx_io file, int st
 
       union_patches(curr_patch_offset, curr_patch_size, union_patch_offset, union_patch_size, union_patch_offset, union_patch_size);
       
-    printf("%lld off %lld %lld %lld size %lld %lld %lld\n", pc, curr_patch_offset[0],curr_patch_offset[1],curr_patch_offset[2],curr_patch_size[0], curr_patch_size[1],curr_patch_size[2]);
+      printf("%d:%lld off %lld %lld %lld size %lld %lld %lld\n", rank, pc, curr_patch_offset[0],curr_patch_offset[1],curr_patch_offset[2],curr_patch_size[0], curr_patch_size[1],curr_patch_size[2]);
     }
     
     printf("union_patch_offset %lld %lld %lld union_patch_size %lld %lld %lld\n",union_patch_offset[0],union_patch_offset[1],union_patch_offset[2], union_patch_size[0], union_patch_size[1], union_patch_size[2]);
     
     MPI_Allgather(union_patch_offset, PIDX_MAX_DIMENSIONS, MPI_LONG_LONG, file->idx_d->rank_r_offset, PIDX_MAX_DIMENSIONS, MPI_LONG_LONG, file->comm);
     MPI_Allgather(union_patch_size, PIDX_MAX_DIMENSIONS, MPI_LONG_LONG, file->idx_d->rank_r_count, PIDX_MAX_DIMENSIONS, MPI_LONG_LONG, file->comm);
+    
+    free(union_patch_offset);
+    free(union_patch_size);
     
     // max union patch size
 //    int64_t* max_union_patch_size = malloc(sizeof (int64_t) * PIDX_MAX_DIMENSIONS);
