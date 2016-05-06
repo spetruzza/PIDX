@@ -15,7 +15,8 @@
 #ifndef _pidx_metadata_h
 #define _pidx_metadata_h
 
-#include "PIDX.h"
+#include <stdint.h>
+#include "PIDX_error_codes.h"
 
 class TiXmlDocument;
   
@@ -35,7 +36,7 @@ PIDX_return_code PIDX_metadata_add_timestep(PIDX_metadata metadata, int index, d
 
 PIDX_return_code PIDX_metadata_get_timestep(PIDX_metadata metadata, int index, double& value);
 
-PIDX_return_code PIDX_metadata_add_simple_box(PIDX_metadata metadata, unsigned long long* log_size, float* phy_size);
+PIDX_return_code PIDX_metadata_add_simple_box(PIDX_metadata metadata, int64_t* log_size, double* phy_size);
 
 PIDX_return_code PIDX_metadata_destroy(PIDX_metadata metadata);
 

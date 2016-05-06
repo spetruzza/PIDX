@@ -123,7 +123,7 @@ PIDX_return_code PIDX_metadata_get_timestep(PIDX_metadata metadata, int index, d
   return PIDX_err_metadata;
 }
 
-PIDX_return_code PIDX_metadata_add_simple_box(PIDX_metadata metadata, unsigned long long* log_size, float* phy_size)
+PIDX_return_code PIDX_metadata_add_simple_box(PIDX_metadata metadata, int64_t* log_size, double* phy_size)
 {
   if(!metadata)
     return PIDX_err_metadata;// use PIDX error
