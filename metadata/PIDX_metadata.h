@@ -15,6 +15,8 @@
 #ifndef _pidx_metadata_h
 #define _pidx_metadata_h
 
+#include "PIDX.h"
+
 class TiXmlDocument;
   
 struct PIDX_metadata_struct{
@@ -23,16 +25,18 @@ struct PIDX_metadata_struct{
 };
 typedef struct PIDX_metadata_struct* PIDX_metadata;
   
-int PIDX_metadata_load(PIDX_metadata* metadata, const char* _filename);
+PIDX_return_code PIDX_metadata_load(PIDX_metadata* metadata, const char* _filename);
 
-int PIDX_metadata_create(PIDX_metadata* metadata, const char* _filename);
+PIDX_return_code PIDX_metadata_create(PIDX_metadata* metadata, const char* _filename);
 
-int PIDX_metadata_save(PIDX_metadata metadata);
+PIDX_return_code PIDX_metadata_save(PIDX_metadata metadata);
 
-int PIDX_metadata_add_timestep(PIDX_metadata metadata, int index, double value);
+PIDX_return_code PIDX_metadata_add_timestep(PIDX_metadata metadata, int index, double value);
 
-int PIDX_metadata_get_timestep(PIDX_metadata metadata, int index, double& value);
+PIDX_return_code PIDX_metadata_get_timestep(PIDX_metadata metadata, int index, double& value);
 
-int PIDX_metadata_destroy(PIDX_metadata metadata);
+PIDX_return_code PIDX_metadata_add_simple_box(PIDX_metadata metadata, unsigned long long* log_size, float* phy_size);
+
+PIDX_return_code PIDX_metadata_destroy(PIDX_metadata metadata);
 
 #endif

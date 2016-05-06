@@ -17,6 +17,11 @@ int main(){
   PIDX_metadata_load(&metadata, "data.xml");
   PIDX_metadata_add_timestep(metadata, 4, 3.598);
   PIDX_metadata_save(metadata);
+
+  unsigned long long log_size[3] = {300, 450, 680};
+  float phy_size[3] = {12.5, 45.330, 6.80};
+  PIDX_metadata_add_simple_box(metadata, log_size, phy_size);
+  PIDX_metadata_save(metadata);
   
   return 0;
 }
