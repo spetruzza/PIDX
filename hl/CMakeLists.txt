@@ -17,7 +17,7 @@
 # *****************************************************/
 
 
-IF (PIDX_BUILD_METADATA)
+IF (PIDX_BUILD_HL)
 
   # ////////////////////////////////////////
   # sources includes and link libraries
@@ -34,9 +34,5 @@ IF (PIDX_BUILD_METADATA)
   PIDX_ADD_LIBRARY(${PIDX_HL_LIB} ${SRCS})
   TARGET_LINK_LIBRARIES(${PIDX_HL_LIB} pidx metadata ${MPI_C_LIBRARIES})
   SET_TARGET_PROPERTIES(${PIDX_HL_LIB} PROPERTIES LINKER_LANGUAGE CXX)
-
-  #PIDX_ADD_EXECUTABLE(pidx_metadata_test "pidx_metadata_test.cpp")
-  #TARGET_LINK_LIBRARIES(pidx_metadata_test ${PIDX_METADATA_LIB} pidx)
   
-
 ENDIF()
