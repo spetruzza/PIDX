@@ -20,15 +20,19 @@
 #include "PIDX.h"
 #include "metadata/PIDX_metadata.h"
 
-class PIDX_Dataset{
+class PIDX_Dataset
+{
 public:
+
  PIDX_Dataset(int* global_size_ptr, double* phy_dim_ptr=NULL, 
  				int* local_offset_ptr=NULL, int* local_size_ptr=NULL);
 
- void open(std::string name);
- void write(std::string var_name, const void* buf, PIDX_data_type dtype, double simtime=0.0);
- void read(std::string var_name, void* buf, double simtime);
- void read(int var_index, void* buf, double simtime);
+ void open(std::string name, PIDX_flags flags);
+ void write(std::string var_name, const void* buf, PIDX_data_type dtype);
+ void read(std::string var_name, void* buf);
+ void read(int var_index, void* buf);
+ void setCurrentTime(int time_index, double simtime);
+ int getTimeIndex(double simtime);
  void close();
 
 private:
@@ -36,22 +40,19 @@ private:
  int process_count, rank;
  std::string filename;
 
-
  PIDX_file file;            
  PIDX_access access;
  PIDX_point global_size, local_offset, local_size;
  PIDX_metadata metadata;
  PIDX_variable* variable;   // variable descriptor
- int *v_per_sample;
- int *bits_per_sample;
- char **type_name;
+
  int first_tstep, last_tstep;
  int variable_count;
- double phy_dim[3];
- int ntsteps;
  int curr_tstep;
- double last_simtime;
-
+ double curr_simtime;
+ double phy_dim[3];
+ bool write_mode;
+ 
  std::map<std::string, int> var_map;
 
 };
