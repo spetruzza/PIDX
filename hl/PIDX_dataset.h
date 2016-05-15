@@ -18,7 +18,10 @@
 #include <stdint.h>
 #include <string>
 #include "PIDX.h"
+
+#if PIDX_HAVE_METADATA
 #include "metadata/PIDX_metadata.h"
+#endif
 
 class PIDX_Dataset
 {
@@ -43,8 +46,11 @@ private:
  PIDX_file file;            
  PIDX_access access;
  PIDX_point global_size, local_offset, local_size;
- PIDX_metadata metadata;
  PIDX_variable* variable;   // variable descriptor
+
+ #if PIDX_HAVE_METADATA
+ PIDX_metadata metadata;
+ #endif
 
  int first_tstep, last_tstep;
  int variable_count;

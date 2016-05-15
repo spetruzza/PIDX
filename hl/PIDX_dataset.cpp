@@ -95,7 +95,6 @@ void PIDX_Dataset::open(std::string name, PIDX_flags flags)
   char output_file_name[512];
   sprintf(output_file_name, "%s.idx", name.c_str());
 
-  struct stat temp;
   if( flags == PIDX_MODE_CREATE || flags == PIDX_MODE_WRONLY )
   {  	
 	  ret = PIDX_file_create(output_file_name, flags, access, &file);
@@ -157,10 +156,12 @@ void PIDX_Dataset::open(std::string name, PIDX_flags flags)
 	  if (ret != PIDX_success)  terminate_with_error_msg("PIDX_reset_variable_counter");
 	}
 
+#if PIDX_HAVE_METADATA
+ 
   if(rank==0)
   {
     std::string metadata_filename = "./"+filename+"/"+filename+".xml";
-
+    struct stat temp;
     if( stat (metadata_filename.c_str(), &temp) == 0 ) {
       PIDX_metadata_load(&metadata, metadata_filename.c_str());
     }
@@ -171,6 +172,8 @@ void PIDX_Dataset::open(std::string name, PIDX_flags flags)
       PIDX_metadata_save(metadata);
     }
   }
+#endif
+
 }
 
 void PIDX_Dataset::write(std::string var_name, const void* buf, PIDX_data_type dtype)
@@ -210,6 +213,8 @@ void PIDX_Dataset::close()
   ret = PIDX_close_access(access);
   if (ret != PIDX_success)  terminate_with_error_msg("PIDX_close_access");
 
+#if PIDX_HAVE_METADATA
+  printf("adding timestep\n");
   if(rank==0 && write_mode) // save timestep information (if not present)
   { 
     double curr_t = 0;
@@ -221,6 +226,7 @@ void PIDX_Dataset::close()
       PIDX_metadata_save(metadata);
     }    
   }
+#endif
 
   free(variable);
   variable = 0;
@@ -233,7 +239,10 @@ void PIDX_Dataset::setCurrentTime(int time_index, double simtime){
 }
 
 int PIDX_Dataset::getTimeIndex(double simtime){
+
   int time_step_count = -1;
+
+#if PIDX_HAVE_METADATA
   int ret = 0;
 
   if(rank == 0)
@@ -261,6 +270,10 @@ int PIDX_Dataset::getTimeIndex(double simtime){
 	}	
 
   MPI_Bcast(&time_step_count, 1, MPI_INT, 0, NEW_COMM_WORLD);
+#else
+  fprintf(stderr, "No PIDX metadata module installed\n");
+  assert(false);
+#endif
 
   return time_step_count;
 }
