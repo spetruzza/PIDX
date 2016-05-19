@@ -5,6 +5,8 @@
 
 #define SIMULATE_IO 0
 
+#define _XOPEN_SOURCE 500
+
 #ifdef BGQ
   #define _XOPEN_SOURCE 600
 #ifndef _GNU_SOURCE
@@ -18,6 +20,7 @@
 #endif
 
 #include <string.h>
+#include <strings.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -28,6 +31,7 @@
 #include <assert.h>
 
 #include <fcntl.h>
+
 #include <unistd.h>
 //#include <sys/types.h>
 //#include <time.h>

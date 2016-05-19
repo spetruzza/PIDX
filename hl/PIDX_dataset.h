@@ -15,6 +15,8 @@
 #ifndef _pidx_dataset_h
 #define _pidx_dataset_h
 
+#include <map>
+#include <cstdarg>
 #include <stdint.h>
 #include <string>
 #include "PIDX.h"

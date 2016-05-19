@@ -41,7 +41,7 @@ IF (PIDX_BUILD_HL)
 
   SET_TARGET_PROPERTIES(${PIDX_HL_LIB} PROPERTIES LINKER_LANGUAGE CXX)
 
-  PIDX_ADD_EXECUTABLE(pidx_hl_test "pidx_hl_test.cpp")
+  PIDX_ADD_EXECUTABLE(pidx_hl_test "PIDX_hl_test.cpp")
   TARGET_LINK_LIBRARIES(pidx_hl_test ${PIDX_HL_LIB})
   
 ENDIF()
