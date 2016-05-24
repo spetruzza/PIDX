@@ -34,8 +34,8 @@ IF (PIDX_BUILD_METADATA)
   TARGET_LINK_LIBRARIES(${PIDX_METADATA_LIB} tinyxml)
   SET_TARGET_PROPERTIES(${PIDX_METADATA_LIB} PROPERTIES LINKER_LANGUAGE CXX)
 
-  PIDX_ADD_EXECUTABLE(pidx_metadata_test "pidx_metadata_test.cpp")
-  TARGET_LINK_LIBRARIES(pidx_metadata_test ${PIDX_METADATA_LIB} pidx)
+#  PIDX_ADD_EXECUTABLE(pidx_metadata_test "pidx_metadata_test.cpp")
+#  TARGET_LINK_LIBRARIES(pidx_metadata_test ${PIDX_METADATA_LIB} pidx)
   
 
 ENDIF()
