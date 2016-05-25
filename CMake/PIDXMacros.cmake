@@ -82,3 +82,16 @@ MACRO(PIDX_ADD_LIBRARY targetname files)
                   ARCHIVE DESTINATION lib
                   LIBRARY DESTINATION lib)
 ENDMACRO()
+
+MACRO(PIDX_ADD_LIBRARY_CXX targetname files)
+  #MESSAGE("Adding library " ${targetname} " from sources: " ${files})                        
+  IF (${BUILD_SHARED_LIBS})
+    ADD_LIBRARY(${targetname} SHARED ${files})
+  ELSE()
+    ADD_LIBRARY(${targetname} STATIC ${files})
+  ENDIF()
+  SET_TARGET_PROPERTIES(${targetname} PROPERTIES LINKER_LANGUAGE CXX)
+  INSTALL(TARGETS ${targetname} 
+                  ARCHIVE DESTINATION lib
+                  LIBRARY DESTINATION lib)
+ENDMACRO()
