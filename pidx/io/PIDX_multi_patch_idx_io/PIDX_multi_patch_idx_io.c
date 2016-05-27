@@ -26,11 +26,12 @@ static PIDX_return_code union_patches(const int64_t* pa_offset, const int64_t* p
       const int64_t* pb_offset, const int64_t* pb_size, int64_t* pc_offset, int64_t* pc_size){
   int d = 0;
   for(d=0; d < PIDX_MAX_DIMENSIONS; d++){
-    pc_offset[d] = min(pa_offset[d],pb_offset[d]);
-    pc_size[d] = max(pa_offset[d]+pa_size[d],pb_offset[d]+pb_size[d])-pc_offset[d];
+    int64_t temp_min_off = min(pa_offset[d],pb_offset[d]);
+    pc_offset[d] = min(temp_min_off,pc_offset[d]);
+    int64_t temp_max_size = max(pa_offset[d]+pa_size[d],pb_offset[d]+pb_size[d]);
+    pc_size[d] = max(temp_max_size,pc_offset[d]+pc_size[d]) - pc_offset[d];
     
   }
-  
   return PIDX_success;
 }
 
@@ -161,6 +162,7 @@ static void set_default_patch_size(PIDX_multi_patch_idx_io file, int64_t* proces
     }
   }
   
+  printf("max dim length %lld %lld %lld\n", max_dim_length[0],max_dim_length[1],max_dim_length[2]);
   for (i = 0; i < PIDX_MAX_DIMENSIONS; i++)
   {
     average_count = average_count + max_dim_length[i];
@@ -179,6 +181,8 @@ static void set_default_patch_size(PIDX_multi_patch_idx_io file, int64_t* proces
       check_bit = check_bit || ((double) file->idx->bounds[i] / average_count > (double) file->idx->bounds[i] / max_dim_length[i]);
   }
   int64_t reg_patch_size[PIDX_MAX_DIMENSIONS];
+
+  int sum_pows = 0;
   //reg_patch_size =  average_count;
   if (equal_partiton == 1)
   {
@@ -193,14 +197,35 @@ static void set_default_patch_size(PIDX_multi_patch_idx_io file, int64_t* proces
     reg_patch_size[0] = getPowerOftwo(max_dim_length[0]) * 1;
     reg_patch_size[1] = getPowerOftwo(max_dim_length[1]) * 1;
     reg_patch_size[2] = getPowerOftwo(max_dim_length[2]) * 1;
-    //printf("Box size = %d %d %d\n", reg_patch_size[0], reg_patch_size[1], reg_patch_size[2]);
-    //reg_patch_size[0] = getPowerOftwo(process_bounds[0]) * 1;
-    //reg_patch_size[1] = getPowerOftwo(process_bounds[1]) * 1;
-    //reg_patch_size[2] = getPowerOftwo(process_bounds[2]) * 1;
-    reg_patch_size[3] = 1;//getPowerOftwo(process_bounds[3]) * 1;
-    reg_patch_size[4] = 1;//getPowerOftwo(process_bounds[4]) * 1;
+    reg_patch_size[3] = getPowerOftwo(process_bounds[3]) * 1;
+    reg_patch_size[4] = getPowerOftwo(process_bounds[4]) * 1;
   }
-  
+
+  printf("pows %d %d %d\n", (int)log2((unsigned int)reg_patch_size[0]), (int)log2((unsigned int)reg_patch_size[1]), 
+                            (int)log2((unsigned int)reg_patch_size[2]));
+  sum_pows = (int)log2((unsigned int)reg_patch_size[0]*reg_patch_size[1]*reg_patch_size[2]);
+/*
+  if(sum_pows % 2 == 0)
+  {
+    int64_t min_len = 1024*1024*1024;
+    int index_extended = -1;
+
+    for (i = 0; i < 3; i++)
+    {
+      if(reg_patch_size[i] < min_len)
+      {
+        min_len = reg_patch_size[i];
+        index_extended = i;
+      }
+    }
+
+    if(index_extended != -1)
+      reg_patch_size[index_extended] *= 2;
+    else
+      fprintf(stderr,"The current restructuring box might be wrong!!!!!!!\n\n");
+   
+  }*/
+
   memcpy(file->idx->reg_patch_size, reg_patch_size, sizeof(uint64_t) * PIDX_MAX_DIMENSIONS);
   //reg_patch_size = reg_patch_size * 4;
 }
@@ -1082,17 +1107,28 @@ PIDX_return_code PIDX_multi_patch_idx_write(PIDX_multi_patch_idx_io file, int st
       
       int64_t* curr_patch_offset = file->idx->variable[start_var_index]->sim_patch[pc]->offset;
       int64_t* curr_patch_size = file->idx->variable[start_var_index]->sim_patch[pc]->size;
+       printf("%d:%lld off %lld %lld %lld size %lld %lld %lld\n", rank, pc, curr_patch_offset[0],curr_patch_offset[1],curr_patch_offset[2],curr_patch_size[0], curr_patch_size[1],curr_patch_size[2]);
 
-      union_patches(curr_patch_offset, curr_patch_size, union_patch_offset, union_patch_size, union_patch_offset, union_patch_size);
-      
-      printf("%d:%lld off %lld %lld %lld size %lld %lld %lld\n", rank, pc, curr_patch_offset[0],curr_patch_offset[1],curr_patch_offset[2],curr_patch_size[0], curr_patch_size[1],curr_patch_size[2]);
+      int64_t* temp_union_patch_offset = malloc(sizeof (int64_t) * PIDX_MAX_DIMENSIONS);
+      memcpy(temp_union_patch_offset, union_patch_offset, (sizeof (int64_t) * PIDX_MAX_DIMENSIONS));
+
+      int64_t* temp_union_patch_size = malloc(sizeof (int64_t) * PIDX_MAX_DIMENSIONS);
+      memcpy(temp_union_patch_size, union_patch_size, (sizeof (int64_t) * PIDX_MAX_DIMENSIONS));
+
+      union_patches(curr_patch_offset, curr_patch_size, temp_union_patch_offset, temp_union_patch_size, union_patch_offset, union_patch_size);
+     
+      free(temp_union_patch_offset);
+      free(temp_union_patch_size);
     }
     
-    printf("union_patch_offset %lld %lld %lld union_patch_size %lld %lld %lld\n",union_patch_offset[0],union_patch_offset[1],union_patch_offset[2], union_patch_size[0], union_patch_size[1], union_patch_size[2]);
-    
+    printf("union_patch_offset %lld %lld %lld %lld %lld union_patch_size %lld %lld %lld %lld %lld\n",union_patch_offset[0],union_patch_offset[1],union_patch_offset[2],union_patch_offset[3],union_patch_offset[4], union_patch_size[0], union_patch_size[1], union_patch_size[2],union_patch_size[3],union_patch_size[4]); 
+
     MPI_Allgather(union_patch_offset, PIDX_MAX_DIMENSIONS, MPI_LONG_LONG, file->idx_d->rank_r_offset, PIDX_MAX_DIMENSIONS, MPI_LONG_LONG, file->comm);
     MPI_Allgather(union_patch_size, PIDX_MAX_DIMENSIONS, MPI_LONG_LONG, file->idx_d->rank_r_count, PIDX_MAX_DIMENSIONS, MPI_LONG_LONG, file->comm);
     
+    memcpy(file->idx_d->rank_r_offset, union_patch_offset, sizeof(uint64_t) * PIDX_MAX_DIMENSIONS);
+    memcpy(file->idx_d->rank_r_count, union_patch_size, sizeof(uint64_t) * PIDX_MAX_DIMENSIONS);
+
     free(union_patch_offset);
     free(union_patch_size);
     
@@ -1118,7 +1154,9 @@ PIDX_return_code PIDX_multi_patch_idx_write(PIDX_multi_patch_idx_io file, int st
    
   }
   
-  set_default_patch_size(file, file->idx_d->rank_r_count, nprocs);
+  //set_default_patch_size(file, file->idx_d->rank_r_count, nprocs);
+
+  printf("set_default_patch_size reg patch size %lld %lld %lld\n", file->idx->reg_patch_size[0], file->idx->reg_patch_size[1], file->idx->reg_patch_size[2]);
   
 #endif
 
