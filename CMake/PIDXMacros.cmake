@@ -26,11 +26,11 @@ MACRO(PIDX_SET_COMPILER_OPTIONS)
   IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     # using Clang
     message("Using clang compiler")
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=implicit-function-declaration")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
   ELSEIF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     # using GCC
     message("Using gcc compiler")
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror-implicit-function-declaration")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
   ELSEIF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
     # using Intel C++
     message("Using intel compiler")

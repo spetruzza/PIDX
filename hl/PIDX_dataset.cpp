@@ -14,12 +14,12 @@
 
 #include "PIDX_dataset.h"
 
-static MPI_Comm NEW_COMM_WORLD; 
+//static MPI_Comm NEW_COMM_WORLD; 
 
 void terminate()
 {
 #if PIDX_HAVE_MPI
-  MPI_Abort(NEW_COMM_WORLD, -1);
+  MPI_Abort(MPI_COMM_WORLD, -1);
 #else
   exit(-1);
 #endif
@@ -37,11 +37,11 @@ void terminate_with_error_msg(const char *format, ...)
 PIDX_Dataset::PIDX_Dataset(int* global_size_ptr, 
 	double* phy_dim_ptr, int* local_offset_ptr, int* local_size_ptr)
 {
-	if(MPI_Comm_dup(MPI_COMM_WORLD, &NEW_COMM_WORLD)!= MPI_SUCCESS)
-    terminate_with_error_msg("ERROR: MPI_Comm_dup error\n");
-  if (MPI_Comm_size(NEW_COMM_WORLD, &process_count) != MPI_SUCCESS)
+//	if(MPI_Comm_dup(MPI_COMM_WORLD, &NEW_COMM_WORLD)!= MPI_SUCCESS)
+//    terminate_with_error_msg("ERROR: MPI_Comm_dup error\n");
+  if (MPI_Comm_size(MPI_COMM_WORLD, &process_count) != MPI_SUCCESS)
     terminate_with_error_msg("ERROR: MPI_Comm_size error\n");
-  if (MPI_Comm_rank(NEW_COMM_WORLD, &rank) != MPI_SUCCESS)
+  if (MPI_Comm_rank(MPI_COMM_WORLD, &rank) != MPI_SUCCESS)
     terminate_with_error_msg("ERROR: MPI_Comm_rank error\n");
 
   if(global_size_ptr == NULL)
@@ -88,7 +88,7 @@ void PIDX_Dataset::open(std::string name, PIDX_flags flags)
   int ret = PIDX_create_access(&access);
   if (ret != PIDX_success)  terminate_with_error_msg("PIDX_create_access");
 #if PIDX_HAVE_MPI
-  ret = PIDX_set_mpi_access(access, NEW_COMM_WORLD);
+  ret = PIDX_set_mpi_access(access, MPI_COMM_WORLD);
   if (ret != PIDX_success)  terminate_with_error_msg("PIDX_set_mpi_access");
 #endif
 
@@ -269,7 +269,7 @@ int PIDX_Dataset::getTimeIndex(double simtime){
     }
 	}	
 
-  MPI_Bcast(&time_step_count, 1, MPI_INT, 0, NEW_COMM_WORLD);
+  MPI_Bcast(&time_step_count, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #else
   fprintf(stderr, "No PIDX metadata module installed\n");
   assert(false);
