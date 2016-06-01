@@ -39,10 +39,13 @@ PIDX_Dataset::PIDX_Dataset(int* global_size_ptr,
 {
 //	if(MPI_Comm_dup(MPI_COMM_WORLD, &NEW_COMM_WORLD)!= MPI_SUCCESS)
 //    terminate_with_error_msg("ERROR: MPI_Comm_dup error\n");
+
   if (MPI_Comm_size(MPI_COMM_WORLD, &process_count) != MPI_SUCCESS)
     terminate_with_error_msg("ERROR: MPI_Comm_size error\n");
   if (MPI_Comm_rank(MPI_COMM_WORLD, &rank) != MPI_SUCCESS)
     terminate_with_error_msg("ERROR: MPI_Comm_rank error\n");
+
+  variable = NULL;
 
   if(global_size_ptr == NULL)
   {
@@ -52,14 +55,13 @@ PIDX_Dataset::PIDX_Dataset(int* global_size_ptr,
   }
 
   if(phy_dim_ptr != NULL)
-		memcpy(phy_dim, phy_dim_ptr, 3*sizeof(phy_dim[0]));
+    memcpy(&phy_dim[0], phy_dim_ptr, 3*sizeof(double));
   else
   {
   	phy_dim[0] = (double) global_size_ptr[0];
   	phy_dim[1] = (double) global_size_ptr[1];
   	phy_dim[2] = (double) global_size_ptr[2];
   }
-
   if(local_offset_ptr == NULL)
   {
   	local_offset_ptr = (int*)malloc(sizeof(int)*3);
@@ -71,10 +73,10 @@ PIDX_Dataset::PIDX_Dataset(int* global_size_ptr,
   	local_size_ptr = global_size_ptr;
   }
 
-  PIDX_set_point_5D(global_size, global_size_ptr[0], global_size_ptr[1], global_size_ptr[2], 1, 1);
-  PIDX_set_point_5D(local_offset, local_offset_ptr[0], local_offset_ptr[1], local_offset_ptr[2], 0, 0);
-  PIDX_set_point_5D(local_size, local_size_ptr[0], local_size_ptr[1], local_size_ptr[2], 1, 1);
- 
+  PIDX_set_point_5D(global_size, (int64_t)global_size_ptr[0], (int64_t)global_size_ptr[1], (int64_t)global_size_ptr[2], 1, 1);
+  PIDX_set_point_5D(local_offset, (int64_t)local_offset_ptr[0], (int64_t)local_offset_ptr[1],(int64_t)local_offset_ptr[2], 0, 0);
+  PIDX_set_point_5D(local_size, (int64_t)local_size_ptr[0], (int64_t)local_size_ptr[1], (int64_t)local_size_ptr[2], 1, 1);
+
 }
 
 
@@ -157,7 +159,6 @@ void PIDX_Dataset::open(std::string name, PIDX_flags flags)
 	}
 
 #if PIDX_HAVE_METADATA
- 
   if(rank==0)
   {
     std::string metadata_filename = "./"+filename+"/"+filename+".xml";
@@ -213,8 +214,7 @@ void PIDX_Dataset::close()
   ret = PIDX_close_access(access);
   if (ret != PIDX_success)  terminate_with_error_msg("PIDX_close_access");
 
-#if PIDX_HAVE_METADATA
-  printf("adding timestep\n");
+#if PIDX_HAVE_METADATA 
   if(rank==0 && write_mode) // save timestep information (if not present)
   { 
     double curr_t = 0;
@@ -228,9 +228,11 @@ void PIDX_Dataset::close()
   }
 #endif
 
-  free(variable);
-  variable = 0;
-
+  if(variable != NULL)
+  { 
+    free(variable);
+    variable = NULL;
+  }
 }
 
 void PIDX_Dataset::setCurrentTime(int time_index, double simtime){
@@ -247,7 +249,7 @@ int PIDX_Dataset::getTimeIndex(double simtime){
 
   if(rank == 0)
   {
-    printf("search in %d to %d\n", first_tstep, last_tstep);
+    //printf("search in %d to %d\n", first_tstep, last_tstep);
     for(int ts=first_tstep; ts < last_tstep; ts++)
     {
       double curr_t = 0;

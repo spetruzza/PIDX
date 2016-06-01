@@ -21,6 +21,8 @@
 #include <string>
 #include "PIDX.h"
 
+//#define PIDX_HAVE_METADATA 0
+
 #if PIDX_HAVE_METADATA
 #include "metadata/PIDX_metadata.h"
 #endif
@@ -41,7 +43,6 @@ public:
  void close();
 
 private:
-
  int process_count, rank;
  std::string filename;
 
@@ -50,18 +51,19 @@ private:
  PIDX_point global_size, local_offset, local_size;
  PIDX_variable* variable;   // variable descriptor
 
- #if PIDX_HAVE_METADATA
+#if PIDX_HAVE_METADATA
  PIDX_metadata metadata;
- #endif
+#endif
 
  int first_tstep, last_tstep;
  int variable_count;
  int curr_tstep;
  double curr_simtime;
- double phy_dim[3];
- bool write_mode;
- 
+
+ int32_t write_mode;
  std::map<std::string, int> var_map;
+ double phy_dim[3];
+
 
 };
   

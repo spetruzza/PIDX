@@ -33,21 +33,21 @@ char* itoa(int val, int base)
 
 PIDX_return_code PIDX_metadata_load(PIDX_metadata* metadata, const char* filename)
 {
-  *metadata = (PIDX_metadata)malloc(sizeof *(*metadata));
-  memset(*metadata, 0, sizeof *(*metadata));
+  *metadata = (PIDX_metadata)malloc(sizeof(*(*metadata)));
+  memset(*metadata, 0, sizeof(*(*metadata)));
   strcpy((*metadata)->filename, filename);
   
   (*metadata)->doc = new TiXmlDocument((*metadata)->filename);
   bool loadOkay = (*metadata)->doc->LoadFile();
   if (loadOkay) { /*printf("XML loaded %s\n", (*metadata)->filename);*/ return PIDX_success; }
-  else          { fprintf(stderr, "Could not load XML %s\n", (*metadata)->filename); return PIDX_err_metadata;}
+  else          { /*fprintf(stderr, "Could not load XML %s\n", (*metadata)->filename);*/ return PIDX_err_metadata;}
   
 }
 
 PIDX_return_code PIDX_metadata_create(PIDX_metadata* metadata, const char* filename)
 {
-  *metadata = (PIDX_metadata)malloc(sizeof *(*metadata));
-  memset(*metadata, 0, sizeof *(*metadata));
+  *metadata = (PIDX_metadata)malloc(sizeof(*(*metadata)));
+  memset(*metadata, 0, sizeof(*(*metadata)));
   strcpy((*metadata)->filename, filename);
   
   (*metadata)->doc = new TiXmlDocument();
@@ -171,5 +171,4 @@ PIDX_return_code PIDX_metadata_destroy(PIDX_metadata metadata)
   if (metadata){ delete metadata; metadata = NULL; }
   return PIDX_success;
 }
-
 
