@@ -40,10 +40,15 @@ PIDX_Dataset::PIDX_Dataset(int* global_size_ptr,
 //	if(MPI_Comm_dup(MPI_COMM_WORLD, &NEW_COMM_WORLD)!= MPI_SUCCESS)
 //    terminate_with_error_msg("ERROR: MPI_Comm_dup error\n");
 
+  process_count = 1;
+  rank = 0;
+
+#if PIDX_HAVE_MPI
   if (MPI_Comm_size(MPI_COMM_WORLD, &process_count) != MPI_SUCCESS)
     terminate_with_error_msg("ERROR: MPI_Comm_size error\n");
   if (MPI_Comm_rank(MPI_COMM_WORLD, &rank) != MPI_SUCCESS)
     terminate_with_error_msg("ERROR: MPI_Comm_rank error\n");
+#endif
 
   variable = NULL;
 
@@ -271,7 +276,10 @@ int PIDX_Dataset::getTimeIndex(double simtime){
     }
 	}	
 
+#if PIDX_HAVE_MPI
   MPI_Bcast(&time_step_count, 1, MPI_INT, 0, MPI_COMM_WORLD);
+#endif
+
 #else
   fprintf(stderr, "No PIDX metadata module installed\n");
   assert(false);
