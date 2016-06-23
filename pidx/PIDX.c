@@ -758,6 +758,16 @@ PIDX_return_code PIDX_file_open(const char* filename, PIDX_flags flags, PIDX_acc
         line[strcspn(line, "\r\n")] = 0;
       }
 
+      if (strcmp(line, "(metadata)") == 0) 
+      {
+        if( fgets(line, sizeof line, fp) == NULL)
+          return PIDX_err_file;
+        line[strcspn(line, "\r\n")] = 0;
+        char* temp_name = strdup(line);
+        strcpy((*file)->idx->metadata_filepath, temp_name);
+        free(temp_name);
+      }
+
       if (strcmp(line, "(time)") == 0)
       {
         if( fgets(line, sizeof line, fp) == NULL)
@@ -1206,6 +1216,16 @@ PIDX_return_code PIDX_get_last_tstep(PIDX_file file, int* tstep)
     return PIDX_err_file;
   
   *tstep = file->idx->last_tstep;
+  
+  return PIDX_success;
+}
+
+PIDX_return_code PIDX_get_metadata_filepath(PIDX_file file, char* filepath)
+{
+  if(!file)
+    return PIDX_err_file;
+  
+  strcpy(filepath, file->idx->metadata_filepath);
   
   return PIDX_success;
 }

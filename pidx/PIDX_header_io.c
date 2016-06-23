@@ -129,12 +129,15 @@ PIDX_return_code PIDX_header_io_write_idx (PIDX_header_io_id header_io, char* da
 #endif
   //pidx does not do path remapping 
   strcpy(header_io->filename_template, data_set_path);
+
   for (N = strlen(header_io->filename_template) - 1; N >= 0; N--) 
   {
     int ch = header_io->filename_template[N];
     header_io->filename_template[N] = 0;
     if (ch == '.') break;
   }
+
+  strcpy(header_io->idx->metadata_filepath, header_io->filename_template);
 
   //can happen if I have only only one block
   if (nbits_blocknumber == 0) 
@@ -217,6 +220,7 @@ PIDX_return_code PIDX_header_io_write_idx (PIDX_header_io_id header_io, char* da
       fprintf(idx_file_p, "\n(bits)\n%s\n", header_io->idx->bitSequence);
       fprintf(idx_file_p, "(bitsperblock)\n%d\n(blocksperfile)\n%d\n", header_io->idx->bits_per_block, header_io->idx->blocks_per_file);
       fprintf(idx_file_p, "(filename_template)\n./%s\n", header_io->filename_template);
+      fprintf(idx_file_p, "(metadata)\n./%s/%s.xml\n", header_io->idx->metadata_filepath, basename);
 
       fprintf(idx_file_p, "(time)\n0 %d time%%09d/"/*note: uintah starts at timestep 1, but we shouldn't assume...*/, header_io->idx->current_time_step);
       fclose(idx_file_p);
@@ -259,6 +263,7 @@ PIDX_return_code PIDX_header_io_write_idx (PIDX_header_io_id header_io, char* da
 
       fprintf(idx_file_p, "(filename_template)\n./%s\n", header_io->filename_template);
     }
+    fprintf(idx_file_p, "(metadata)\n./%s/%s.xml\n", header_io->idx->metadata_filepath, basename);
 
     fprintf(idx_file_p, "\n(time)\n0 %d time%%09d/"/*note: uintah starts at timestep 1, but we shouldn't assume...*/, header_io->idx->current_time_step);
     fclose(idx_file_p);

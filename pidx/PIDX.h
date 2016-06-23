@@ -302,6 +302,11 @@ PIDX_return_code PIDX_get_first_tstep(PIDX_file file, int* tstep);
 /// \return The last timestep index.
 PIDX_return_code PIDX_get_last_tstep(PIDX_file file, int* tstep);
 
+/// Gets the path of the metadata (XML) file.
+/// \param file The IDX file handler.
+/// \return The path of the metadata file.
+PIDX_return_code PIDX_get_metadata_filepath(PIDX_file file, char* filepath);
+
 /// Sets the index of the variable at which location it needs to be written at or read from in an IDX file.
 /// \param file The IDX file handler.
 /// \return Index of the variable.

@@ -105,6 +105,7 @@ struct idx_file_struct
   char bitSequence[512];
   char bitPattern[512];
   char filename_template[1024];                                         ///< Depends on the time step
+  char metadata_filepath[1024];                                           
   
   int64_t reg_patch_size[PIDX_MAX_DIMENSIONS];
   
