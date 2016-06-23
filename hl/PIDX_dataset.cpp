@@ -16,6 +16,8 @@
 
 //static MPI_Comm NEW_COMM_WORLD; 
 
+//double epsilon = pow(10,-12);
+
 void terminate()
 {
 #if PIDX_HAVE_MPI
@@ -99,8 +101,7 @@ void PIDX_Dataset::open(std::string name, PIDX_flags flags)
   if (ret != PIDX_success)  terminate_with_error_msg("PIDX_set_mpi_access");
 #endif
 
-  char output_file_name[512];
-  sprintf(output_file_name, "%s.idx", name.c_str());
+  const char* output_file_name = name.c_str();
 
   if( flags == PIDX_MODE_CREATE || flags == PIDX_MODE_WRONLY )
   {  	
@@ -118,8 +119,8 @@ void PIDX_Dataset::open(std::string name, PIDX_flags flags)
   }
   else
   {
-  	if(rank == 0)
-  		printf("opening %s\n", output_file_name);
+  	// if(rank == 0)
+  	// 	printf("opening %s\n", output_file_name);
 	  //  PIDX mandatory calls
 	  ret = PIDX_file_open(output_file_name, flags, access, &file);
 	  if (ret != PIDX_success)  terminate_with_error_msg("PIDX_file_create");
@@ -136,8 +137,8 @@ void PIDX_Dataset::open(std::string name, PIDX_flags flags)
 	  if (ret != PIDX_success)  terminate_with_error_msg("PIDX_get_last_tstep");
 
 	  int ntsteps = last_tstep-first_tstep;
-	  if(rank == 0)
-	    printf("found %d variables ntsteps %d ft %d lt %d\n", variable_count, ntsteps, first_tstep, last_tstep);
+	  // if(rank == 0)
+	  //   printf("found %d variables ntsteps %d ft %d lt %d\n", variable_count, ntsteps, first_tstep, last_tstep);
 
 	  variable = (PIDX_variable*)malloc(sizeof(*variable) * variable_count);
 	  memset(variable, 0, sizeof(*variable) * variable_count);
@@ -166,14 +167,38 @@ void PIDX_Dataset::open(std::string name, PIDX_flags flags)
 #if PIDX_HAVE_METADATA
   if(rank==0)
   {
-    std::string metadata_filename = "./"+filename+"/"+filename+".xml";
-    struct stat temp;
-    if( stat (metadata_filename.c_str(), &temp) == 0 ) {
-      PIDX_metadata_load(&metadata, metadata_filename.c_str());
+    char metadata_filename[1024];
+
+    if( flags == PIDX_MODE_CREATE || flags == PIDX_MODE_WRONLY )
+    {
+      char dirname[1024], basename[1024], metadata_path[1024];
+      strcpy(metadata_path, filename.c_str());
+
+      for (int N = strlen(metadata_path) - 1; N >= 0; N--) 
+      {
+        int ch = metadata_path[N];
+        metadata_path[N] = 0;
+        if (ch == '.') break;
+      }
+
+      VisusSplitFilename(metadata_path, dirname, basename);
+      sprintf(metadata_filename, "%s/%s.xml", metadata_path, basename);
     }
     else
     {
-      PIDX_metadata_create(&metadata, metadata_filename.c_str());
+      ret = PIDX_get_metadata_filepath(file, metadata_filename);
+      if (ret != PIDX_success)  terminate_with_error_msg("PIDX_get_metadata_filepath");
+    }
+
+    struct stat temp;
+    if( stat (metadata_filename, &temp) == 0 ) {
+      ret = PIDX_metadata_load(&metadata, metadata_filename);
+      if (ret != PIDX_success)  terminate_with_error_msg("PIDX_metadata_load");
+    }
+    else
+    {
+      fprintf(stderr, "PIDX: Metadata file not found creating new one: %s\n", metadata_filename);
+      PIDX_metadata_create(&metadata, metadata_filename);
       PIDX_metadata_add_simple_box(metadata, global_size, phy_dim);
       PIDX_metadata_save(metadata);
     }
@@ -254,15 +279,14 @@ int PIDX_Dataset::getTimeIndex(double simtime){
 
   if(rank == 0)
   {
-    //printf("search in %d to %d\n", first_tstep, last_tstep);
-    for(int ts=first_tstep; ts < last_tstep; ts++)
+    for(int ts=first_tstep; ts <= last_tstep; ts++)
     {
-      double curr_t = 0;
+      double curr_t = 0.0;
       ret = PIDX_metadata_get_timestep(metadata, ts, curr_t);
-      
+
       if (ret != PIDX_success)  terminate_with_error_msg("PIDX_metadata_get_timestep");
           
-      if(curr_t == simtime)
+      if(curr_t == simtime)//< (simtime+epsilon) && curr_t > (simtime-epsilon))
       {
         time_step_count = ts;
         break;

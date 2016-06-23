@@ -27,15 +27,25 @@ int main(int argc,  char** argv){
     Pa[i] = (double)i;
 
   int ts = 0;
-  double simtime = 0.0;
+  double simtime = 0.015000;
 
   // write
-  dataset->open("test", PIDX_MODE_CREATE);
+  dataset->open("test.idx", PIDX_MODE_CREATE);
   dataset->setCurrentTime(ts, simtime);
   dataset->write("Pressure", Pa, FLOAT64);
   
   dataset->close();
 
-  MPI_Abort(MPI_COMM_WORLD, -1);
+  dataset->open("test.idx", PIDX_MODE_RDONLY);
+  int ti = dataset->getTimeIndex(simtime);
+  if(ti >= 0){
+    dataset->setCurrentTime(ts, simtime);
+    printf("timestep found\n");
+  }
+  
+  dataset->read(0, Pa);
+
+
+  MPI_Finalize();
 
 }
