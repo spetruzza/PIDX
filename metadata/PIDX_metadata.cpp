@@ -40,7 +40,7 @@ PIDX_return_code PIDX_metadata_load(PIDX_metadata* metadata, const char* filenam
   (*metadata)->doc = new TiXmlDocument((*metadata)->filename);
   bool loadOkay = (*metadata)->doc->LoadFile();
   if (loadOkay) { /*printf("XML loaded %s\n", (*metadata)->filename);*/ return PIDX_success; }
-  else          { /*fprintf(stderr, "Could not load XML %s\n", (*metadata)->filename);*/ return PIDX_err_metadata;}
+  else          { fprintf(stderr, "Could not load XML %s\n", (*metadata)->filename); return PIDX_err_metadata;}
   
 }
 
@@ -56,16 +56,13 @@ PIDX_return_code PIDX_metadata_create(PIDX_metadata* metadata, const char* filen
   TiXmlElement * element = new TiXmlElement( "idx" );
   (*metadata)->doc->LinkEndChild( element );
   
-  bool loadOkay = (*metadata)->doc->LoadFile();
-  if (loadOkay) { /*printf("XML loaded %s\n", (*metadata)->filename);*/ return PIDX_success; }
-  else          { fprintf(stderr,"Could not load XML %s\n", (*metadata)->filename); return PIDX_err_metadata;}
+  PIDX_metadata_save(*metadata);
 }
 
 PIDX_return_code PIDX_metadata_save(PIDX_metadata metadata)
 {
   if(metadata != NULL){
     metadata->doc->SaveFile(metadata->filename);
-    printf("file saved\n");
     return PIDX_success;
   }
   
@@ -108,12 +105,12 @@ PIDX_return_code PIDX_metadata_get_timestep(PIDX_metadata metadata, int index, d
   TiXmlHandle docHandle( metadata->doc );
   
   TiXmlElement* child = docHandle.FirstChild("idx").FirstChild("timesteps").FirstChild("timestep").ToElement();
-  
+
   for( ; child; child=child->NextSiblingElement() )
   {  
     int time_log = atoi(child->GetText());
-    
     if (time_log == index){
+      
       value = strtod(child->Attribute("time"),NULL);
       return PIDX_success;
     }
