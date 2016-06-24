@@ -165,9 +165,10 @@ void PIDX_Dataset::open(std::string name, PIDX_flags flags)
 	}
 
 #if PIDX_HAVE_METADATA
-  if(rank==0)
+  if(rank==0 && has_metadatafile)
   {
     char metadata_filename[1024];
+    has_metadatafile = true;
 
     if( flags == PIDX_MODE_CREATE || flags == PIDX_MODE_WRONLY )
     {
@@ -187,7 +188,10 @@ void PIDX_Dataset::open(std::string name, PIDX_flags flags)
     else
     {
       ret = PIDX_get_metadata_filepath(file, metadata_filename);
-      if (ret != PIDX_success)  terminate_with_error_msg("PIDX_get_metadata_filepath");
+      if (ret != PIDX_success) {
+        has_metadatafile = false;
+        fprintf(stderr,"No metadata filepath found in .idx\n");
+      }
     }
 
     struct stat temp;
@@ -195,13 +199,29 @@ void PIDX_Dataset::open(std::string name, PIDX_flags flags)
       ret = PIDX_metadata_load(&metadata, metadata_filename);
       if (ret != PIDX_success)  terminate_with_error_msg("PIDX_metadata_load");
     }
-    else
+    /*else
     {
+      if(!has_metadatafile)
+      {
+        char dirname[1024], basename[1024], metadata_path[1024];
+        strcpy(metadata_path, filename.c_str());
+
+        for (int N = strlen(metadata_path) - 1; N >= 0; N--) 
+        {
+          int ch = metadata_path[N];
+          metadata_path[N] = 0;
+          if (ch == '.') break;
+        }
+
+        VisusSplitFilename(metadata_path, dirname, basename);
+        sprintf(metadata_filename, "%s/%s/%s.xml", dirname, metadata_path, basename);
+      }
+      printf("filename %s\n", filename.c_str());
       fprintf(stderr, "PIDX: Metadata file not found creating new one: %s\n", metadata_filename);
       PIDX_metadata_create(&metadata, metadata_filename);
       PIDX_metadata_add_simple_box(metadata, global_size, phy_dim);
       PIDX_metadata_save(metadata);
-    }
+    }*/
   }
 #endif
 
@@ -245,7 +265,7 @@ void PIDX_Dataset::close()
   if (ret != PIDX_success)  terminate_with_error_msg("PIDX_close_access");
 
 #if PIDX_HAVE_METADATA 
-  if(rank==0 && write_mode) // save timestep information (if not present)
+  if(rank==0 && write_mode && has_metadatafile) // save timestep information (if not present)
   { 
     double curr_t = 0;
     ret = PIDX_metadata_get_timestep(metadata, curr_tstep, curr_t);
@@ -277,7 +297,7 @@ int PIDX_Dataset::getTimeIndex(double simtime){
 #if PIDX_HAVE_METADATA
   int ret = 0;
 
-  if(rank == 0)
+  if(rank == 0 && has_metadatafile)
   {
     for(int ts=first_tstep; ts <= last_tstep; ts++)
     {

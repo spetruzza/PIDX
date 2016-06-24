@@ -45,6 +45,7 @@ public:
 private:
  int process_count, rank;
  std::string filename;
+ bool has_metadatafile;
 
  PIDX_file file;            
  PIDX_access access;
