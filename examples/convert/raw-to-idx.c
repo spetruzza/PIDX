@@ -46,7 +46,7 @@ static char output_file_template[512] = "test_idx";   ///< output IDX file Name 
 static char var_file[512];
 static char input_file[512];
 static char **file_name;
-static double **buffer;
+static float **buffer;
 static int *values_per_sample;    // Example: 1 for scalar 3 for vector
 static int64_t restructured_box_size[5] = {32, 32, 32, 1, 1};
 
@@ -124,17 +124,18 @@ int main(int argc, char **argv)
   PIDX_set_mpi_access(access, MPI_COMM_WORLD);
 #endif
 #endif
-
+  int bytes_per_sample = sizeof(float);
 
   for (t = 0; t < time_step_count; t++)
   {
     int fp = open(file_name[t], O_RDONLY);
+    printf("reading file %s\n", file_name[t]);
     for(var = 0; var < variable_count; var++)
     {
       values_per_sample[var] =  1;
-      int64_t variable_offset = var * global_box_size[0] * global_box_size[1] * global_box_size[2] * sizeof(double);
-      buffer[var] = malloc(sizeof (uint64_t) * local_box_size[0] * local_box_size[1] * local_box_size[2]  * values_per_sample[var]);
-      pread(fp, buffer[var], local_box_size[0] * local_box_size[1] * local_box_size[2] * sizeof(double), variable_offset + (rank * local_box_size[0] * local_box_size[1] * local_box_size[2] * sizeof(double)));
+      int64_t variable_offset = var * global_box_size[0] * global_box_size[1] * global_box_size[2] * bytes_per_sample;
+      buffer[var] = malloc(bytes_per_sample * local_box_size[0] * local_box_size[1] * local_box_size[2]  * values_per_sample[var]);
+      pread(fp, buffer[var], local_box_size[0] * local_box_size[1] * local_box_size[2] * bytes_per_sample, variable_offset + (rank * local_box_size[0] * local_box_size[1] * local_box_size[2] * bytes_per_sample));
 
       /*
       const double pi = acos(-1.0);
@@ -157,10 +158,11 @@ int main(int argc, char **argv)
     PIDX_set_variable_count(file, variable_count);
     PIDX_set_dims(file, global_bounding_box);
     PIDX_set_current_time_step(file, t);
-    PIDX_set_restructuring_box(file, restructured_box_size);
+    //PIDX_set_restructuring_box(file, restructured_box_size);
+    PIDX_debug_output(file);
     for(var = 0; var < variable_count; var++)
     {
-      ret = PIDX_variable_create(var_name[var], sizeof(double) * 8, "1*float64", &variable[var]);
+      ret = PIDX_variable_create(var_name[var], bytes_per_sample * 8, "1*float32", &variable[var]);
       if (ret != PIDX_success)  report_error("PIDX_variable_data_layout", __FILE__, __LINE__);
 
       ret = PIDX_variable_write_data_layout(variable[var], local_offset, local_size, buffer[var], PIDX_column_major);
@@ -179,7 +181,7 @@ int main(int argc, char **argv)
   PIDX_close_access(access);
 #endif
 
-  delete_buffers();
+ // delete_buffers();
 
 #if PIDX_HAVE_MPI
   MPI_Finalize();
@@ -279,10 +281,13 @@ static int parse_args(int argc, char **argv)
     return (-1);
   }
 
-  FILE *fp = fopen(var_file, "r");
+  /*FILE *fp = fopen(var_file, "r");
   ret = fscanf(fp, "%d", &variable_count);
   if (ret != EOF && ret != 1)
     return (-1);
+*/
+  variable_count = 1;
+  int bytes_per_sample = 4;
 
   var_name = malloc(sizeof(char*) * variable_count);
   memset(var_name, 0, sizeof(char*) * variable_count);
@@ -291,8 +296,8 @@ static int parse_args(int argc, char **argv)
   memset(buffer, 0, sizeof(double*) * variable_count);
   for (i = 0; i < variable_count; i++)
   {
-    buffer[i] = malloc(sizeof(double) * local_box_size[0] * local_box_size[1] * local_box_size[2]);
-    memset(buffer[i], 0, sizeof(double) * local_box_size[0] * local_box_size[1] * local_box_size[2]);
+    buffer[i] = malloc(bytes_per_sample * local_box_size[0] * local_box_size[1] * local_box_size[2]);
+    memset(buffer[i], 0, bytes_per_sample * local_box_size[0] * local_box_size[1] * local_box_size[2]);
   }
 
   values_per_sample = malloc(sizeof(*values_per_sample) * variable_count);
@@ -301,30 +306,34 @@ static int parse_args(int argc, char **argv)
   for (i = 0; i < variable_count; i++)
   {
     char temp_var_name[1024];
-    ret = fscanf(fp, "%s %d", temp_var_name, &values_per_sample[i]);
+    /*ret = fscanf(fp, "%s %d", temp_var_name, &values_per_sample[i]);
     if (ret != 2 || ret == EOF)
-      return (-1);
-    var_name[i] = strdup(temp_var_name);
+      return (-1);*/
+    var_name[i] = "data";//strdup(temp_var_name);
   }
-  fclose(fp);
+
+  //fclose(fp);
 
 
-  fp = fopen(input_file, "r");
-  ret = fscanf(fp, "%d", &time_step_count);
-  if (ret != EOF && ret != 1)
-    return (-1);
+  // fp = fopen(input_file, "r");
+  // ret = fscanf(fp, "%d", &time_step_count);
+  // if (ret != EOF && ret != 1)
+  //   return (-1);
+  time_step_count = 1;
   file_name = malloc(sizeof(char*) * time_step_count);
   memset(file_name, 0, sizeof(char*) * time_step_count);
 
   for (i = 0; i < time_step_count; i++)
   {
-    char temp_file_name[1024];
+    /*char temp_file_name[1024];
     ret = fscanf(fp, "%s", temp_file_name);
     if (ret != 1 || ret == EOF)
-      return (-1);
-    file_name[i] = strdup(temp_file_name);
+      return (-1);*/
+    //file_name[i] = strdup(temp_file_name);
+    file_name[i] = malloc(sizeof(char)*1024);
+    strcpy(file_name[i], input_file);
   }
-  fclose(fp);
+  //fclose(fp);
 
   return (0);
 }

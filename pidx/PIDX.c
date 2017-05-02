@@ -346,7 +346,7 @@ PIDX_return_code PIDX_file_create(const char* filename, PIDX_flags flags, PIDX_a
   memset((*file)->idx->reg_patch_size, 0, sizeof(int64_t) * PIDX_MAX_DIMENSIONS);
 
   (*file)->idx->compression_factor = 1;
-  (*file)->idx->compression_bit_rate = 64;
+  (*file)->idx->compression_bit_rate = 32; //64
   for (i=0;i<PIDX_MAX_DIMENSIONS;i++)
     (*file)->idx->chunk_size[i] = 1;
 
@@ -540,7 +540,7 @@ PIDX_return_code PIDX_file_open(const char* filename, PIDX_flags flags, PIDX_acc
   memset((*file)->idx->bitSequence, 0, 512);
   memset((*file)->idx->reg_patch_size, 0, sizeof(int64_t) * PIDX_MAX_DIMENSIONS);
 
-  (*file)->idx->compression_bit_rate = 64;
+  (*file)->idx->compression_bit_rate = 32; //64;
   (*file)->idx->compression_factor = 1;
   for (i=0;i<PIDX_MAX_DIMENSIONS;i++)
     (*file)->idx->chunk_size[i] = 1;
@@ -756,6 +756,9 @@ PIDX_return_code PIDX_file_open(const char* filename, PIDX_flags flags, PIDX_acc
         if( fgets(line, sizeof line, fp) == NULL)
           return PIDX_err_file;
         line[strcspn(line, "\r\n")] = 0;
+        char* temp_name = strdup(line);
+        strcpy((*file)->idx->filename_template, temp_name);
+        free(temp_name);
       }
 
       if (strcmp(line, "(metadata)") == 0) 

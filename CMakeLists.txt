@@ -163,7 +163,7 @@ ADD_SUBDIRECTORY(tutorial)
 ADD_SUBDIRECTORY(profile)
 ADD_SUBDIRECTORY(metadata)
 ADD_SUBDIRECTORY(hl)
-# ADD_SUBDIRECTORY(examples)
+ADD_SUBDIRECTORY(examples)
 
 # ///////////////////////////////////////////////
 # installation
